@@ -48,7 +48,7 @@ process.stdin.on('end', () => {
       snapshotKind = 'prep (Claude-written, includes working memory)';
     } else if (fs.existsSync(autoPath)) {
       snapshotPath = autoPath;
-      snapshotKind = 'auto (hook-generated: MEMORY index + git + transcript tail)';
+      snapshotKind = 'auto (hook-generated: git state + transcript tail)';
     } else if (fs.existsSync(pointerPath)) {
       const fallback = fs.readFileSync(pointerPath, 'utf8').trim();
       if (fallback && fs.existsSync(fallback)) {

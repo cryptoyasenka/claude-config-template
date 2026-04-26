@@ -29,7 +29,9 @@ or copy and adjust to taste.
 │   ├── pre-compact-snapshot.js        # PreCompact: dumps git + transcript tail
 │   ├── post-compact-restore.js        # SessionStart(compact): tells the model to read the snapshot
 │   └── context-statusline.js          # statusline + bridge file consumed by auto-compact-nudge
+├── .gitattributes                     # forces LF line endings (shebangs need them on macOS/Linux)
 ├── .gitignore
+├── LICENSE                            # MIT
 └── README.md
 ```
 
@@ -97,23 +99,37 @@ HOME_FWD=$(cygpath -m "$HOME")   # forward-slash form, e.g. C:/Users/you
 sed -i "s|<CLAUDE_HOME>|$HOME_FWD/.claude|g" ~/.claude/settings.json
 ```
 
-**PowerShell:**
+**PowerShell (Windows PowerShell 5.1 and PowerShell 7+):**
 
 ```powershell
-$path = "$env:USERPROFILE\.claude" -replace '\\', '/'
-(Get-Content "$env:USERPROFILE\.claude\settings.json") `
-  -replace '<CLAUDE_HOME>', $path `
-  | Set-Content "$env:USERPROFILE\.claude\settings.json"
+$file = "$env:USERPROFILE\.claude\settings.json"
+$path = ("$env:USERPROFILE\.claude") -replace '\\', '/'
+$utf8 = [System.Text.UTF8Encoding]::new($false)   # UTF-8, no BOM
+$body = [System.IO.File]::ReadAllText($file, $utf8) -replace '<CLAUDE_HOME>', $path
+[System.IO.File]::WriteAllText($file, $body, $utf8)
 ```
+
+> Why `[System.IO.File]` instead of `Set-Content`? Windows PowerShell 5.1's
+> `Set-Content` writes in the system default encoding (ANSI on most
+> Windows installs), which corrupts the JSON if your `$USERPROFILE`
+> contains non-ASCII characters. `[System.IO.File]` writes UTF-8 without
+> a BOM on both 5.1 and 7+ regardless of locale.
 
 ### 3. Verify
 
 Start a new Claude Code session and check:
 
 - The statusline shows `Claude │ <dirname> │ ░░░░░░░░░░ 0%` (it grows
-  as context fills).
-- After a few tool calls, `os.tmpdir()/claude-ctx-<session-id>.json`
-  exists — that's the bridge file the nudge hook reads.
+  as context fills, turning yellow → orange → blinking red as the bar
+  approaches 100%).
+- After a few tool calls, a bridge file `claude-ctx-<session-id>.json`
+  appears in your system temp directory. The nudge hook reads it to
+  decide when to warn you about the upcoming auto-compact:
+  - **Windows:** `%TEMP%\claude-ctx-<sid>.json`
+    (typically `C:\Users\<you>\AppData\Local\Temp\`)
+  - **macOS:** `$TMPDIR/claude-ctx-<sid>.json`
+    (typically `/var/folders/.../T/`)
+  - **Linux:** `/tmp/claude-ctx-<sid>.json`
 
 If something is wrong, look at `~/.claude/debug/` for hook errors.
 

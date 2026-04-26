@@ -179,8 +179,11 @@ Workflow rules (apply when GSD is installed):
 - For non-trivial debugging: /gsd:debug (scientific-method session
   with checkpoints).
 - Use /gsd:verify-work, not "looks good", to confirm features built.
-- The GSD plugin installs its own ~/.claude/hooks/gsd-*.js — keep
-  them; they coexist with the auto-compact hooks shipped here.
+- The GSD plugin installs its own ~/.claude/hooks/gsd-*.js. They use
+  different event types (PreToolUse, Stop) than the auto-compact hooks
+  shipped here (PostToolUse, PreCompact, SessionStart) so they should
+  not conflict — but verify by running with both enabled and watching
+  ~/.claude/debug/ for errors.
 -->
 
 <!--

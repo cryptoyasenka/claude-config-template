@@ -12,7 +12,9 @@
 // back above RESET_THRESHOLD (e.g. after a compact), both markers clear
 // so the cycle can repeat.
 //
-// Reads metrics written by gsd-statusline.js to /tmp/claude-ctx-{sid}.json.
+// Reads metrics written by context-statusline.js to
+// os.tmpdir()/claude-ctx-{sid}.json. Without that bridge file, this hook
+// is a no-op — the statusline must run at least once per session first.
 
 const fs = require('fs');
 const os = require('os');

@@ -7,9 +7,12 @@
 //
 // What we save:
 //   - timestamp, trigger (auto|manual), cwd, session_id
-//   - MEMORY.md index (so the model re-indexes memories after compact)
 //   - git status + current branch + last 5 commits (if cwd is a git repo)
 //   - last 30 lines of the transcript (best-effort tail of the jsonl)
+//
+// What we do NOT save: in-memory plans, open files, decisions not yet on
+// disk. That's the model's job — see auto-compact-nudge.js, which asks
+// Claude to write a richer "prep" snapshot before this hook fires.
 //
 // PreCompact CANNOT inject additionalContext (not supported by the hook
 // type) — that's why the companion hook is SessionStart, which CAN.
