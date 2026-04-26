@@ -1,0 +1,56 @@
+{
+  "_comment": "Replace <CLAUDE_HOME> with the absolute path to your ~/.claude directory after copying this file. See README.md for one-liner replacement commands.",
+
+  "env": {
+    "CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1",
+    "MAX_THINKING_TOKENS": "128000",
+    "CLAUDE_CODE_DISABLE_1M_CONTEXT": "1"
+  },
+
+  "alwaysThinkingEnabled": true,
+  "effortLevel": "high",
+  "theme": "dark",
+
+  "statusLine": {
+    "type": "command",
+    "command": "node \"<CLAUDE_HOME>/hooks/context-statusline.js\""
+  },
+
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"<CLAUDE_HOME>/hooks/post-compact-restore.js\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "auto|manual",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"<CLAUDE_HOME>/hooks/pre-compact-snapshot.js\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"<CLAUDE_HOME>/hooks/auto-compact-nudge.js\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

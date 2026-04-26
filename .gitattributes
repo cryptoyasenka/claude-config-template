@@ -1,0 +1,9 @@
+# Force LF on text files so hooks with shebangs work on macOS/Linux.
+# CRLF on a "#!/usr/bin/env node" line makes env try to exec "node\r".
+* text=auto eol=lf
+
+# Explicit for clarity
+*.js   text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+*.sh   text eol=lf

@@ -1,0 +1,25 @@
+# This template repo itself doesn't contain secrets, but if you copy it
+# into ~/.claude/ and want to back THAT up, use the whitelist strategy
+# documented in README.md (the "Backing up your live ~/.claude" section).
+# That strategy denies everything by default and explicitly allows safe
+# files — the only safe posture for a directory that holds OAuth tokens,
+# API keys, and full conversation transcripts.
+
+# Editor / OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Node (in case anyone runs node scripts in here)
+node_modules/
+
+# Local-only overrides — never commit
+settings.local.json
+.env
+.env.*
+!.env.example
