@@ -1,6 +1,4 @@
 {
-  "_comment": "Replace <CLAUDE_HOME> with the absolute path to your ~/.claude directory after copying this file. See README.md for one-liner replacement commands.",
-
   "env": {
     "CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1",
     "MAX_THINKING_TOKENS": "128000",
@@ -47,7 +45,7 @@
           {
             "type": "command",
             "command": "node \"<CLAUDE_HOME>/hooks/auto-compact-nudge.js\"",
-            "timeout": 10
+            "timeout": 3
           }
         ]
       }

@@ -48,6 +48,11 @@ ralph-loop dependencies). They use only Node's built-in modules
 - **Anthropic plan that supports `effortLevel: "high"`** — if your plan
   only allows `medium`, drop the `effortLevel` field from
   `settings.json` (the rest still works).
+- **Extended thinking access** — `MAX_THINKING_TOKENS=128000` and
+  `alwaysThinkingEnabled: true` require a plan that exposes the
+  extended-thinking budget. Without it those keys are silently ignored;
+  no harm, just no benefit. Drop them or lower the value to match your
+  plan's ceiling.
 
 ---
 
@@ -61,12 +66,15 @@ ralph-loop dependencies). They use only Node's built-in modules
 **macOS / Linux / Git Bash on Windows:**
 
 ```bash
+mkdir -p ~/.claude/hooks
 cp CLAUDE.md     ~/.claude/CLAUDE.md
 cp settings.json ~/.claude/settings.json
-mkdir -p ~/.claude/hooks
 cp hooks/*.js    ~/.claude/hooks/
-chmod +x         ~/.claude/hooks/*.js
 ```
+
+> The hooks are invoked by Claude Code as `node "path/to/hook.js"`
+> (see `settings.json`), so the executable bit and the `#!/usr/bin/env node`
+> shebang are decorative — no `chmod +x` needed.
 
 **PowerShell (Windows):**
 
