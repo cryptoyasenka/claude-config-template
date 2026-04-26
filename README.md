@@ -154,21 +154,46 @@ uncomment whichever apply to you.
 
 ### `settings.json`
 
+> **Cost trade-off — read this before you copy.** The thinking-related
+> defaults here (`alwaysThinkingEnabled: true` +
+> `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1` + `MAX_THINKING_TOKENS=128000`)
+> are tuned for **hard engineering work** — multi-file refactors,
+> debugging, architecture, anything where you'd rather Claude take
+> 60 seconds and get it right than 5 seconds and confidently miss the
+> bug. The thinking-token spend is justified there.
+>
+> The downside: every turn — including trivial ones like *"open this
+> file"* or *"what does this command do"* — also walks up to the
+> 128K thinking ceiling. On a small Anthropic plan, or in a workflow
+> dominated by short Q&A and quick lookups, this preset will feel
+> expensive. If that's you, drop `alwaysThinkingEnabled` (and
+> optionally `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING`) and let the model
+> scale its thinking budget adaptively — you keep the quality ceiling
+> for hard turns and skip the burn on easy ones.
+
 Things you may want to change:
 
 - **`effortLevel`** — `"high"` is the recommended ceiling. Drop or
   lower it if your plan doesn't support it.
+- **`alwaysThinkingEnabled`** — when `true`, every turn enters extended
+  thinking, even trivial ones. Set to `false` (or remove) if you do a
+  lot of short Q&A; you keep `effortLevel: "high"` for hard turns and
+  skip the thinking budget on easy ones.
 - **`theme`** — `"dark"` / `"light"` / etc.
-- **`MAX_THINKING_TOKENS`** — `128000` is generous; lower it if you
-  want to save tokens.
+- **`MAX_THINKING_TOKENS`** — `128000` is the ceiling, not the spend
+  per turn. With adaptive thinking enabled the model usually uses
+  far less; with adaptive thinking disabled (default below) it walks
+  closer to the ceiling on every turn. Lower it if you want a hard cap.
 - **`CLAUDE_CODE_DISABLE_1M_CONTEXT=1`** — keeps you on the standard
   ~200K window. The 1M-token beta is available, but empirically the
   model degrades noticeably on it (loses long-range coherence, gets
   sloppy with file paths). Remove only if you really need >200K and
   accept the quality drop.
-- **`CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1`** — forces full thinking
-  budget on every turn instead of letting the system shrink it
-  adaptively. Pairs with `MAX_THINKING_TOKENS=128000`.
+- **`CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1`** — forces the full
+  `MAX_THINKING_TOKENS` budget on every turn instead of letting the
+  system shrink it for easy questions. Pair with
+  `alwaysThinkingEnabled: true` for maximum quality at maximum cost;
+  remove both for a cheaper "think only when it actually helps" mode.
 
 ### Recommended companion plugins / skills (optional)
 
