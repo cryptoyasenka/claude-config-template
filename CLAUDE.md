@@ -165,21 +165,26 @@ Uncomment any of the blocks below if you've installed the corresponding
 tooling. Keeping them out of the default keeps this file portable.
 
 <!--
-## GSD (Get Shit Done) — github.com/jasonkneen/get-shit-done
+## GSD (Get Shit Done) — github.com/gsd-build/get-shit-done
 
-Available commands: /gsd:new-project, /gsd:plan-phase,
-/gsd:execute-phase, /gsd:debug, /gsd:verify-work, /gsd:next, etc.
+Spec-driven workflow with 80+ /gsd:* slash commands and fresh-context
+sub-agents. Install per the project README.
 
-Workflow rules:
+Common commands: /gsd:new-project, /gsd:plan-phase,
+/gsd:execute-phase, /gsd:debug, /gsd:verify-work, /gsd:next.
+
+Workflow rules (apply when GSD is installed):
 - Before a feature larger than ~1 hour: /gsd:discuss-phase to lock
   scope and "done" criteria.
 - For non-trivial debugging: /gsd:debug (scientific-method session
   with checkpoints).
 - Use /gsd:verify-work, not "looks good", to confirm features built.
+- The GSD plugin installs its own ~/.claude/hooks/gsd-*.js — keep
+  them; they coexist with the auto-compact hooks shipped here.
 -->
 
 <!--
-## gstack — Garry Tan's toolkit
+## gstack — github.com/garrytan/gstack
 
 Use the /browse skill for all web browsing. Never use
 mcp__claude-in-chrome__* tools.
@@ -193,8 +198,9 @@ Common skills: /office-hours, /plan-ceo-review, /plan-eng-review,
 -->
 
 <!--
-## ralph-loop plugin
+## ralph-loop — anthropics/claude-plugins-official marketplace
 
-Use /ralph-loop:ralph-loop in the current repo to start a continuous
-work loop with a stop hook. /ralph-loop:cancel-ralph to stop.
+Install once: /plugin install ralph-loop@claude-plugins-official
+Use /ralph-loop:ralph-loop in a repo to start a continuous work loop
+with a stop hook. /ralph-loop:cancel-ralph to stop.
 -->

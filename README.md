@@ -137,6 +137,86 @@ Things you may want to change:
 - **`theme`** — `"dark"` / `"light"` / etc.
 - **`MAX_THINKING_TOKENS`** — `128000` is generous; lower it if you
   want to save tokens.
+- **`CLAUDE_CODE_DISABLE_1M_CONTEXT=1`** — keeps you on the standard
+  ~200K window. The 1M-token beta is available, but empirically the
+  model degrades noticeably on it (loses long-range coherence, gets
+  sloppy with file paths). Remove only if you really need >200K and
+  accept the quality drop.
+- **`CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1`** — forces full thinking
+  budget on every turn instead of letting the system shrink it
+  adaptively. Pairs with `MAX_THINKING_TOKENS=128000`.
+
+### Recommended companion plugins / skills (optional)
+
+This template intentionally ships only the four custom hooks. The
+plugins and skill packs below pair well with the anti-degradation
+defaults — install whichever you want, **independently** from this
+template. Each is maintained by its own author and stays fresh on its
+own release cycle.
+
+> Why not bundle them? Bundling third-party code freezes it at the
+> version I happened to copy and creates licence/attribution
+> ambiguity. A pointer keeps you on the upstream.
+
+#### GSD (Get Shit Done) — spec-driven workflow with sub-agents
+
+A meta-prompting / context-engineering system. Adds 80+ `/gsd:*`
+slash commands (planner, executor, debugger, verifier, etc.) and
+runs heavy work in fresh 200K sub-agent contexts so your main
+session stays lean.
+
+- Source: <https://github.com/gsd-build/get-shit-done>
+- Author: TÂCHES (Lex Christopherson / glittercowboy)
+- Install: see the project README — current versions auto-detect
+  Claude Code's skills directory.
+
+If you install GSD, uncomment the **`## GSD`** block at the bottom
+of `CLAUDE.md`.
+
+#### gstack — Garry Tan's skill pack
+
+Browser-driven QA, design review, eng review, security review,
+release tooling. The `/browse` skill is a fast headless-browser
+replacement for `mcp__claude-in-chrome__*`.
+
+- Source: <https://github.com/garrytan/gstack>
+- Author: Garry Tan (Y Combinator)
+- License: MIT
+- Install: follow the project README (one-paste install).
+
+If you install gstack, uncomment the **`## gstack`** block at the
+bottom of `CLAUDE.md`.
+
+#### ralph-loop — continuous-work plugin
+
+Runs a `/ralph-loop:ralph-loop` command that loops Claude on a
+target until a stop condition fires. From the official Anthropic
+plugin marketplace.
+
+- Source: <https://github.com/anthropics/claude-plugins-official>
+- Install (inside Claude Code):
+  ```
+  /plugin install ralph-loop@claude-plugins-official
+  ```
+
+If you install it, uncomment the **`## ralph-loop`** block in
+`CLAUDE.md`.
+
+#### chrome-cdp — direct Chrome DevTools Protocol skill
+
+Talk to a running Chrome (or AdsPower / Dolphin / AgentX profile)
+over CDP without the Playwright MCP overhead. Useful for browser
+automation when you want full control of the session.
+
+- Upstream: <https://github.com/pasky/chrome-cdp-skill>
+- Fork with AgentX support: <https://github.com/cryptoyasenka/chrome-cdp-skill>
+- Install: clone somewhere, then symlink into `~/.claude/skills/`:
+  ```bash
+  git clone https://github.com/pasky/chrome-cdp-skill.git
+  ln -s "$PWD/chrome-cdp-skill/skills/chrome-cdp" ~/.claude/skills/chrome-cdp
+  ```
+
+---
 
 ### Sound notifications (optional)
 
