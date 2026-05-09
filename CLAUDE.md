@@ -284,12 +284,15 @@ Workflow rules (apply when GSD is installed):
 Use the /browse skill for all web browsing. Never use
 mcp__claude-in-chrome__* tools.
 
-Common skills: /office-hours, /plan-ceo-review, /plan-eng-review,
-/plan-design-review, /design-consultation, /design-shotgun,
-/design-html, /review, /ship, /land-and-deploy, /canary, /benchmark,
-/browse, /qa, /qa-only, /design-review, /retro, /investigate,
-/document-release, /codex, /cso, /autoplan, /devex-review,
-/careful, /freeze, /guard, /unfreeze, /gstack-upgrade, /learn.
+gstack commands are flat-namespace (no `/gstack:*` prefix) — every
+slash command in the list below is from gstack, not Claude Code
+built-ins. Common skills: /office-hours, /plan-ceo-review,
+/plan-eng-review, /plan-design-review, /design-consultation,
+/design-shotgun, /design-html, /review, /ship, /land-and-deploy,
+/canary, /benchmark, /browse, /qa, /qa-only, /design-review, /retro,
+/investigate, /document-release, /codex, /cso, /autoplan,
+/devex-review, /careful, /freeze, /guard, /unfreeze, /gstack-upgrade,
+/learn.
 -->
 
 <!--

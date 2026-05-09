@@ -250,8 +250,15 @@ replacement for `mcp__claude-in-chrome__*`.
 - License: MIT
 - Install: follow the project README (one-paste install).
 
+> Heads-up on naming: gstack commands are **flat-namespace** (`/review`,
+> `/qa`, `/ship`, `/cso`, `/freeze`, …) — they don't carry a `gstack:`
+> prefix the way `/gsd:*` and `/ralph-loop:*` do. If you install
+> multiple skill packs, this is the one whose commands are easiest to
+> mistake for built-ins.
+
 If you install gstack, uncomment the **`## gstack`** block at the
-bottom of `CLAUDE.md`.
+bottom of `CLAUDE.md` — it lists all ~30 commands shipped with the
+pack as of this writing (subject to change upstream).
 
 #### ralph-loop — continuous-work plugin
 
