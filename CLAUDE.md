@@ -162,7 +162,88 @@ granted.
 # Optional sections
 
 Uncomment any of the blocks below if you've installed the corresponding
-tooling. Keeping them out of the default keeps this file portable.
+tooling, or if you want to adopt the workflow pattern it describes.
+Keeping them out of the default keeps this file portable.
+
+<!--
+## Per-project working memory — `.planning/CURRENT.md`
+
+A lightweight pattern that survives auto-compact, session crashes, and
+unreliable power. The conversation context can be lost; this file lives
+in the repo and survives. Treat it as the source of truth for
+"where am I right now" — distinct from longer-form spec/plan files,
+which describe "what to do long-term".
+
+In each active project, keep a `.planning/CURRENT.md` file with these
+short sections (target ~40-100 lines total):
+
+- `## Status` — what's done, in flight, blocked
+- `## Open files` — paths and line numbers you're editing right now
+- `## Next step` — one concrete next action (not a vague goal — not
+  "finish the UI" but "add retry logic at client.py:42 after the
+  connect-test passes")
+- `## Decisions / constraints` — agreements made in the session that
+  aren't yet on disk
+- `## Last touched` — ISO date+time of the last update
+
+When to update (prefer `Edit` over `Write` — atomic):
+- After every meaningful step: a commit, a finished component, a
+  fixed bug → update `Status` and `Next step`
+- When the active file set changes → update `Open files`
+- Before ending a session, or just before writing a pre-compact prep
+  snapshot → final update
+- When marking the task "complete" → final update with status
+  `complete`
+
+When to read:
+- At the very start of a session in that project — **first**, before
+  any other action
+- After auto-compact — the pre-compact prep snapshot should point at
+  this file; read it before resuming
+- Whenever you feel lost about which file to touch next — re-read
+  before the next step
+
+For new projects, create `CURRENT.md` among the **first** files
+(alongside README), not as a deferred task. A minimal initial body is
+enough: `Status: "just initialized"`, `Next step: "<first thing>"`,
+`Last touched: <date>`. Skip this only for one-off scripts or
+read-only forks.
+
+How it interacts with other tools:
+- **Spec/phase files** (e.g. GSD `.planning/PHASE-*.md`): they describe
+  what to build; `CURRENT.md` describes the in-flight position. If a
+  phase file is active, `CURRENT.md` references it, e.g.
+  `Status: in PHASE-3, task 4/7`.
+- **Pre-compact prep snapshots**: instead of trying to fit all working
+  memory into the snapshot, write a short pointer ("working in
+  ~/code/X, read .planning/CURRENT.md there, plus 2-3 lines of
+  session-only context that isn't in CURRENT.md yet"). Source of truth
+  is `CURRENT.md` in the repo.
+
+Template to drop into a new project's `.planning/CURRENT.md`:
+
+```
+# CURRENT — <project name>
+
+**Last touched:** YYYY-MM-DD HH:MM
+**Status:** <one line>
+
+## Status
+- [x] <done>
+- [ ] <in progress>
+- [ ] <next>
+
+## Open files
+- `path/to/file.py:LL` — what I'm editing
+- ...
+
+## Next step
+<concrete action, not abstract goal>
+
+## Decisions / constraints
+- <what we agreed in this session that isn't in code yet>
+```
+-->
 
 <!--
 ## GSD (Get Shit Done) — github.com/gsd-build/get-shit-done

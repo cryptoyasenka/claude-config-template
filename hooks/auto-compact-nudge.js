@@ -8,6 +8,12 @@
 // Tier 2 (CRITICAL, 26% remaining ≈ 85% displayed, ~19K tokens headroom):
 //   "next tool call MUST be the snapshot write, auto-compact imminent"
 //
+// Both tiers explicitly tell Claude to keep working after the snapshot.
+// Earlier wording said "finish, then stop" and caused the model to halt
+// productive work as if the warning were a stop signal — built-in
+// auto-compact handles compaction itself, so the only valid reasons to
+// stop are task completion or genuine blocking.
+//
 // Each tier fires once per "high usage window". When remaining climbs
 // back above RESET_THRESHOLD (e.g. after a compact), both markers clear
 // so the cycle can repeat.
@@ -76,8 +82,10 @@ process.stdin.on('end', () => {
         `  ${prepSnapshotPath}\n\n` +
         `Minimum content: (1) active task in one line, (2) next concrete step, (3) files currently open/edited, ` +
         `(4) any in-memory decisions not yet on disk. Skip nice formatting — survival mode. ` +
-        `After the snapshot write, finish only the current atomic operation, then stop. ` +
-        `SessionStart(compact) hook will restore from this path after compaction.`;
+        `After the snapshot write, finish the current atomic operation. Then KEEP WORKING — ` +
+        `do not stop just because of this warning. Built-in auto-compact will fire on its own; ` +
+        `SessionStart(compact) hook will restore from this snapshot path. Stopping is only correct ` +
+        `if the user's task is actually done or genuinely blocked.`;
     } else if (remaining <= PREP_THRESHOLD && !fs.existsSync(prepMarker)) {
       fs.writeFileSync(prepMarker, JSON.stringify({ firedAt: now, usedPct }));
       message =

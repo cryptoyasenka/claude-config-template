@@ -149,8 +149,22 @@ If something is wrong, look at `~/.claude/debug/` for hook errors.
 
 Open it and skim the seven anti-degradation rules — adjust language,
 remove what doesn't fit your workflow. Optional sections at the bottom
-(GSD, gstack, ralph-loop, aggressive auto-commit) are commented out;
-uncomment whichever apply to you.
+are commented out; uncomment whichever apply to you:
+
+- **Per-project working memory (`.planning/CURRENT.md`)** — a
+  workflow pattern, not a tool install. Keep one short file per repo
+  with current status, open files, and the next concrete step. Survives
+  auto-compact, session crashes, and power loss because it lives in
+  the repo rather than in conversation context. Pairs naturally with
+  the auto-compact survival hooks shipped here. Adopt it if you switch
+  between several projects, or if your environment is unreliable
+  (laptop with bad battery, region with power outages); skip it for
+  one-off scripts.
+- **GSD, gstack, ralph-loop** — third-party plugin/skill packs.
+  Uncomment the matching block only if you've installed the tool.
+- **Aggressive auto-commit** — overrides the default "don't commit
+  unless asked". Use it if losing in-flight work is costly in your
+  setup.
 
 ### `settings.json`
 
