@@ -8,11 +8,13 @@
 // Tier 2 (CRITICAL, 26% remaining ≈ 85% displayed, ~19K tokens headroom):
 //   "next tool call MUST be the snapshot write, auto-compact imminent"
 //
-// Both tiers explicitly tell Claude to keep working after the snapshot.
-// Earlier wording said "finish, then stop" and caused the model to halt
-// productive work as if the warning were a stop signal — built-in
-// auto-compact handles compaction itself, so the only valid reasons to
-// stop are task completion or genuine blocking.
+// Tier 2's message explicitly tells Claude to keep working after the
+// snapshot. Earlier wording said "finish, then stop" and caused the
+// model to halt productive work as if the warning were a stop signal —
+// but built-in auto-compact handles compaction itself, so the only
+// valid reasons to stop are task completion or genuine blocking. Tier 1
+// is gentler ("don't start NEW multi-step work") and does not need the
+// same correction.
 //
 // Each tier fires once per "high usage window". When remaining climbs
 // back above RESET_THRESHOLD (e.g. after a compact), both markers clear

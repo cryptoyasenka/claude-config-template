@@ -86,8 +86,11 @@ headroom).** Last chance if you skipped Stage 1:
    path.
 2. Minimum content: active task + next step + open files. Skip nice
    formatting — survival mode.
-3. After the snapshot write, finish only the current atomic operation
-   and stop.
+3. After the snapshot write, finish the current atomic operation and
+   keep working. Do **not** treat the warning as a stop signal —
+   built-in auto-compact will fire on its own, and the post-compact
+   hook restores from the snapshot. Stop only if the user's task is
+   actually done or genuinely blocked.
 
 **Exception for destructive operations** (DB migration, `git rebase`,
 deploy, multi-step loop iteration): take the work to the nearest

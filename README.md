@@ -7,11 +7,14 @@ A starter `~/.claude/` config for Claude Code with:
 - **Two-stage auto-compact survival** — early-warning hooks and a
   snapshot/restore pair so you don't lose your working memory when
   context auto-compacts.
-- **Generic statusline** — model, directory, and a colored context-usage
-  bar (turns red and blinks at 80%+).
+- **Generic statusline** — model, directory, and a colored
+  context-usage bar (green → yellow → orange → blinking red with a
+  💀 at 80%+).
 - **A `CLAUDE.md` template** — global rules with seven concrete
   anti-degradation principles, plus optional sections you can
-  uncomment for GSD, gstack, ralph-loop, or aggressive auto-commit.
+  uncomment for a per-project working-memory pattern
+  (`.planning/CURRENT.md`), GSD, gstack, ralph-loop, or aggressive
+  auto-commit.
 
 No secrets, no transcripts, no project-specific personal config — fork
 or copy and adjust to taste.
@@ -128,8 +131,8 @@ $body = [System.IO.File]::ReadAllText($file, $utf8) -replace '<CLAUDE_HOME>', $p
 Start a new Claude Code session and check:
 
 - The statusline shows `Claude │ <dirname> │ ░░░░░░░░░░ 0%` (it grows
-  as context fills, turning yellow → orange → blinking red as the bar
-  approaches 100%).
+  as context fills, going green → yellow → orange → blinking red with
+  a 💀 as the bar approaches 100%).
 - After a few tool calls, a bridge file `claude-ctx-<session-id>.json`
   appears in your system temp directory. The nudge hook reads it to
   decide when to warn you about the upcoming auto-compact:
