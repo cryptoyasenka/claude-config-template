@@ -276,15 +276,29 @@ automation when you want full control of the session.
 
 - Upstream: <https://github.com/pasky/chrome-cdp-skill>
 - Fork with AgentX support: <https://github.com/cryptoyasenka/chrome-cdp-skill>
-- Install: clone somewhere, then symlink into `~/.claude/skills/`:
+- Install: clone somewhere, then link into `~/.claude/skills/`.
+
+  **macOS / Linux / Git Bash on Windows:**
+
   ```bash
   git clone https://github.com/pasky/chrome-cdp-skill.git
   ln -s "$PWD/chrome-cdp-skill/skills/chrome-cdp" ~/.claude/skills/chrome-cdp
   ```
 
+  **PowerShell (Windows)** — `ln -s` requires Developer Mode or admin;
+  a directory junction works without either:
+
+  ```powershell
+  git clone https://github.com/pasky/chrome-cdp-skill.git
+  $src = Join-Path $PWD "chrome-cdp-skill\skills\chrome-cdp"
+  $dst = "$env:USERPROFILE\.claude\skills\chrome-cdp"
+  New-Item -ItemType Directory -Force -Path (Split-Path $dst) | Out-Null
+  cmd /c mklink /J "$dst" "$src"
+  ```
+
 ---
 
-### Sound notifications (optional)
+## Sound notifications (optional)
 
 Add hooks that play a system sound when Claude finishes a turn or asks
 for input. Append to the `hooks` block in `settings.json`:

@@ -178,9 +178,9 @@ in the repo and survives. Treat it as the source of truth for
 which describe "what to do long-term".
 
 In each active project, keep a `.planning/CURRENT.md` file. Target
-~40-100 lines total, organised like this:
+~40-100 lines total, organized like this:
 
-- **Header (two `**bold:**` lines, no section heading):**
+- **Two header lines (no `##` heading), one bold-prefixed each:**
   `**Last touched:** YYYY-MM-DD HH:MM` and
   `**Status:** <one-line elevator pitch>` — e.g.
   `Status: in PHASE-3, task 4/7`. The one-liner is for the reader who
