@@ -177,17 +177,25 @@ in the repo and survives. Treat it as the source of truth for
 "where am I right now" — distinct from longer-form spec/plan files,
 which describe "what to do long-term".
 
-In each active project, keep a `.planning/CURRENT.md` file with these
-short sections (target ~40-100 lines total):
+In each active project, keep a `.planning/CURRENT.md` file. Target
+~40-100 lines total, organised like this:
 
-- `## Status` — what's done, in flight, blocked
+- **Header (two `**bold:**` lines, no section heading):**
+  `**Last touched:** YYYY-MM-DD HH:MM` and
+  `**Status:** <one-line elevator pitch>` — e.g.
+  `Status: in PHASE-3, task 4/7`. The one-liner is for the reader who
+  just wants to know "where am I" at a glance.
+- `## Status` — checklist breakdown: what's done, in flight, blocked.
+  This expands the one-liner above.
 - `## Open files` — paths and line numbers you're editing right now
 - `## Next step` — one concrete next action (not a vague goal — not
   "finish the UI" but "add retry logic at client.py:42 after the
   connect-test passes")
 - `## Decisions / constraints` — agreements made in the session that
   aren't yet on disk
-- `## Last touched` — ISO date+time of the last update
+
+(The duplicated "Status" — once as a header line, once as a heading —
+is intentional. They serve different readers: a glance vs. a scan.)
 
 When to update (prefer `Edit` over `Write` — atomic):
 - After every meaningful step: a commit, a finished component, a
