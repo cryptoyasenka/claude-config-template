@@ -31,6 +31,7 @@ or copy and adjust to taste.
 │   ├── auto-compact-nudge.js          # PostToolUse: 2-stage warning before auto-compact
 │   ├── pre-compact-snapshot.js        # PreCompact: dumps git + transcript tail
 │   ├── post-compact-restore.js        # SessionStart(compact): tells the model to read the snapshot
+│   ├── session-context-hint.js        # SessionStart: surfaces .planning/CURRENT.md (optional pattern)
 │   └── context-statusline.js          # statusline + bridge file consumed by auto-compact-nudge
 ├── .gitattributes                     # forces LF line endings (shebangs need them on macOS/Linux)
 ├── .gitignore
@@ -38,7 +39,7 @@ or copy and adjust to taste.
 └── README.md
 ```
 
-The four hooks are independent of any plugin (no GSD, gstack, or
+The five hooks are independent of any plugin (no GSD, gstack, or
 ralph-loop dependencies). They use only Node's built-in modules
 (`fs`, `path`, `os`, `child_process`).
 
@@ -163,6 +164,21 @@ are commented out; uncomment whichever apply to you:
   between several projects, or if your environment is unreliable
   (laptop with bad battery, region with power outages); skip it for
   one-off scripts.
+
+  Wired up with `session-context-hint.js` (SessionStart hook): when
+  you launch Claude inside a project that has `.planning/CURRENT.md`,
+  the hook injects a one-line "read this file first" instruction; when
+  you launch outside any project, it lists active projects sorted by
+  recency. Silent no-op if you don't use the pattern, so it's safe to
+  leave wired up. Configure where the hook looks for projects with the
+  `CLAUDE_PROJECTS_ROOT` env var (default: `~/Projects`) — set it in
+  `settings.json`'s `env` block:
+
+  ```json
+  "env": {
+    "CLAUDE_PROJECTS_ROOT": "C:/Projects"
+  }
+  ```
 - **GSD, gstack, ralph-loop** — third-party plugin/skill packs.
   Uncomment the matching block only if you've installed the tool.
 - **Aggressive auto-commit** — overrides the default "don't commit

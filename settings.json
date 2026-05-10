@@ -17,6 +17,15 @@
   "hooks": {
     "SessionStart": [
       {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"<CLAUDE_HOME>/hooks/session-context-hint.js\"",
+            "timeout": 5
+          }
+        ]
+      },
+      {
         "matcher": "compact",
         "hooks": [
           {
