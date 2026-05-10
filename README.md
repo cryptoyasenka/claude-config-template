@@ -32,14 +32,16 @@ or copy and adjust to taste.
 │   ├── pre-compact-snapshot.js        # PreCompact: dumps git + transcript tail
 │   ├── post-compact-restore.js        # SessionStart(compact): tells the model to read the snapshot
 │   ├── session-context-hint.js        # SessionStart: surfaces .planning/CURRENT.md (optional pattern)
-│   └── context-statusline.js          # statusline + bridge file consumed by auto-compact-nudge
+│   ├── context-statusline.js          # statusline + bridge file consumed by auto-compact-nudge
+│   ├── auto-backup.js                 # Stop: spawns the backup worker (no-op without CLAUDE_BACKUP_REPO)
+│   └── auto-backup-worker.js          # Stop worker: mirrors ~/.claude/ subset to a private git clone
 ├── .gitattributes                     # forces LF line endings (shebangs need them on macOS/Linux)
 ├── .gitignore
 ├── LICENSE                            # MIT
 └── README.md
 ```
 
-The five hooks are independent of any plugin (no GSD, gstack, or
+The seven hooks are independent of any plugin (no GSD, gstack, or
 ralph-loop dependencies). They use only Node's built-in modules
 (`fs`, `path`, `os`, `child_process`).
 
@@ -375,6 +377,133 @@ for input. Append to the `hooks` block in `settings.json`:
   }]
 }]
 ```
+
+---
+
+## Optional: auto-backup of `~/.claude/` to a private repo
+
+`auto-backup.js` + `auto-backup-worker.js` mirror a curated subset of
+your `~/.claude/` (CLAUDE.md, settings.json, hooks/, agents/, commands/,
+projects/*/memory/) into a separate git clone, commit any real changes,
+and push them. The Stop-hook entry script spawns the worker as a
+detached background process, so the user-facing turn is never blocked
+by the backup.
+
+Useful if your storage isn't trusted (laptop with bad disk, region with
+power outages, frequent OS reinstalls), or if you want a chronological
+audit log of how your config and auto-memory evolved over time.
+
+**Without `CLAUDE_BACKUP_REPO` set, both scripts are silent no-ops** —
+they're safe to leave wired up in `settings.json` even if you don't
+adopt the pattern.
+
+### Setup
+
+1. **Create a private GitHub repo** (e.g. `<you>/claude-config-backup`)
+   and clone it locally somewhere outside `~/.claude/`:
+
+   ```bash
+   gh repo create <you>/claude-config-backup --private
+   git clone git@github.com:<you>/claude-config-backup.git ~/claude-config-backup
+   ```
+
+2. **Add a `.gitattributes`** to neutralize CRLF noise on Windows so
+   the worker doesn't see phantom diffs every session:
+
+   ```
+   * text=auto eol=lf
+   ```
+
+   Commit and push it before enabling the hook.
+
+3. **Set `CLAUDE_BACKUP_REPO`** in `settings.json`'s `env` block so
+   the worker knows where to mirror. Use the absolute path to the
+   local clone:
+
+   ```json
+   "env": {
+     "CLAUDE_BACKUP_REPO": "/Users/you/claude-config-backup"
+   }
+   ```
+
+   On Windows: forward slashes work fine (`"C:/Users/you/claude-config-backup"`).
+
+4. **Configure global git identity** if you haven't already — the
+   worker uses whatever's in `~/.gitconfig`:
+
+   ```bash
+   git config --global user.name "Your Name"
+   git config --global user.email "you@example.com"
+   ```
+
+5. **Initial commit** — push at least one commit (the `.gitattributes`
+   from step 2 counts) so the backup repo has a `main` branch the
+   worker can push to.
+
+### What gets mirrored
+
+Whitelist (everything else is **never** copied):
+
+- `CLAUDE.md`, `settings.json`
+- `hooks/`, `agents/`, `commands/` — minus `node_modules/`, `*.log`, `*.lock`
+- `projects/*/memory/` — auto-memory across all project slugs
+  (the slug `projects/<C--Users-you>/memory/` is keyed off your home
+  directory, so it varies per machine — the worker discovers it
+  dynamically)
+
+Sensitive paths NOT mirrored: `.credentials.json`, `.claude.json`,
+`.mcp.json`, `settings.local.json`, conversation transcripts (`*.jsonl`),
+`snapshots/`, `plugins/`, `skills/`, `debug/`, `telemetry/`,
+`paste-cache/`, etc.
+
+If you want to add new categories of file to the backup, edit
+`auto-backup-worker.js` directly.
+
+### Kill switch
+
+Create the file `~/.claude/.no-auto-backup` to disable the hook
+without editing `settings.json`. Delete it to re-enable.
+
+### Diagnostics
+
+The worker writes to `~/.claude/hooks/auto-backup.log`. Each line is
+either `pushed: <shortstat>` (success) or `push failed (will retry
+next session): <git error>` (push couldn't reach the remote).
+
+If the local clone diverges from origin (rare — typically only if
+you push to the same backup repo from elsewhere, like a different
+machine using the same hook), every subsequent push fails as
+non-fast-forward. Reconcile in the backup clone:
+
+```bash
+cd "$CLAUDE_BACKUP_REPO"
+git fetch origin
+git reset --hard origin/main
+```
+
+This discards local auto-commits not on origin — safe because their
+file content is already mirrored from `~/.claude/`, the next session's
+backup will recreate any missing changes.
+
+### Restoring on a new device
+
+The combined repo this template lives in (`claude-config-template`)
+gives you the bones; your private backup repo gives you the contents.
+Migration:
+
+1. Clone your backup repo over a fresh `~/.claude/`:
+
+   ```bash
+   git clone git@github.com:<you>/claude-config-backup.git ~/.claude
+   ```
+
+2. Re-do anything outside the whitelist:
+   - Run `claude` and re-authenticate (recreates `.credentials.json`).
+   - Re-install plugins inside Claude Code (`/plugin install ...`).
+   - Re-install skills (junctions / clones outside `~/.claude/`).
+   - Re-install MCP servers if you use them.
+
+3. Re-set `CLAUDE_BACKUP_REPO` to the new clone path on this machine.
 
 ---
 

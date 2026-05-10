@@ -58,6 +58,17 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"<CLAUDE_HOME>/hooks/auto-backup.js\"",
+            "timeout": 3
+          }
+        ]
+      }
     ]
   }
 }
