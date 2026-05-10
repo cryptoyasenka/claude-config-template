@@ -232,7 +232,7 @@ Things you may want to change:
 
 ### Recommended companion plugins / skills (optional)
 
-This template intentionally ships only the four custom hooks. The
+This template intentionally ships only the seven custom hooks. The
 plugins and skill packs below pair well with the anti-degradation
 defaults — install whichever you want, **independently** from this
 template. Each is maintained by its own author and stays fresh on its
@@ -444,8 +444,10 @@ adopt the pattern.
    ```
 
 5. **Initial commit** — push at least one commit (the `.gitattributes`
-   from step 2 counts) so the backup repo has a `main` branch the
-   worker can push to.
+   from step 2 counts) so the local clone has an upstream-tracking
+   branch the worker can push to. The worker calls plain `git push`
+   with no refspec, so whatever branch your initial clone landed on
+   (`main`, `master`, or anything else) is what gets pushed.
 
 ### What gets mirrored
 
@@ -480,12 +482,14 @@ next session): <git error>` (push couldn't reach the remote).
 If the local clone diverges from origin (rare — typically only if
 you push to the same backup repo from elsewhere, like a different
 machine using the same hook), every subsequent push fails as
-non-fast-forward. Reconcile in the backup clone:
+non-fast-forward. Reconcile in the backup clone — substitute your
+default branch name for `<branch>` (usually `main`, sometimes
+`master`):
 
 ```bash
 cd "$CLAUDE_BACKUP_REPO"
 git fetch origin
-git reset --hard origin/main
+git reset --hard origin/<branch>
 ```
 
 This discards local auto-commits not on origin — safe because their
