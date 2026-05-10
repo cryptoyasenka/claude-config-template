@@ -389,6 +389,20 @@ for input.
 
 ## Optional: auto-backup of `~/.claude/` to a private repo
 
+> Two backup strategies live in this README and they're independent —
+> pick one, or run both:
+>
+> 1. **This section** — automatic, hook-driven, mirrors a curated
+>    *subset* of `~/.claude/` into a **separate** private git clone
+>    on every Stop event.
+> 2. **["Backing up your live `~/.claude/`"](#backing-up-your-live-claude)** —
+>    manual, git-init **inside** `~/.claude/` itself with a whitelist
+>    `.gitignore`. You commit by hand whenever you feel like it.
+>
+> The auto-backup is "fire and forget"; the in-place version gives you
+> a single repo that *is* your live config. Either one survives a disk
+> failure if you push.
+
 `auto-backup.js` + `auto-backup-worker.js` mirror a curated subset of
 your `~/.claude/` (CLAUDE.md, settings.json, hooks/, agents/, commands/,
 projects/*/memory/) into a separate git clone, commit any real changes,
@@ -514,7 +528,16 @@ Migration:
    - Re-install skills (junctions / clones outside `~/.claude/`).
    - Re-install MCP servers if you use them.
 
-3. Re-set `CLAUDE_BACKUP_REPO` to the new clone path on this machine.
+3. Re-point machine-specific `env` values in `settings.json` —
+   these are absolute paths from the *old* machine, baked in at
+   substitution time, so they almost certainly don't exist on the new
+   one:
+   - `CLAUDE_BACKUP_REPO` → the new local clone path of the backup repo
+   - `CLAUDE_PROJECTS_ROOT` → the new local projects directory
+     (only present if you use the `session-context-hint.js` workflow)
+   - Any hook paths still reading `<CLAUDE_HOME>/...` — if your home
+     directory has a different absolute path on the new machine, redo
+     the substitution from step 2 of the install section.
 
 ---
 
