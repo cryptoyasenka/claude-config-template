@@ -326,7 +326,14 @@ automation when you want full control of the session.
 ## Sound notifications (optional)
 
 Add hooks that play a system sound when Claude finishes a turn or asks
-for input. Append to the `hooks` block in `settings.json`:
+for input.
+
+> **Merge, don't replace.** The shipped `settings.json` already has a
+> `Stop` array (it runs `auto-backup.js`). Don't paste these snippets
+> as-is — that creates a duplicate `Stop` key (invalid JSON) or
+> overwrites the backup hook. Instead, add another `{ "hooks": [...] }`
+> entry inside the existing `Stop` array, and add the `Notification`
+> array as a sibling of `Stop`.
 
 **Windows (PowerShell sounds):**
 

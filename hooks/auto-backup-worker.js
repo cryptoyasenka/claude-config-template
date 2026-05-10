@@ -123,7 +123,10 @@ try {
   git('commit -F .git/COMMIT_EDITMSG');
 
   try {
-    git('push origin main', { timeout: 30000 });
+    // `git push` (no refspec) uses the branch's upstream-tracking
+    // configuration set by the initial `git clone`, so this works
+    // whether the default branch is main, master, or anything else.
+    git('push', { timeout: 30000 });
     log(`pushed: ${stat}`);
   } catch (e) {
     log(`push failed (will retry next session): ${e.message.split('\n')[0]}`);
