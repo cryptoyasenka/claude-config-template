@@ -483,6 +483,16 @@ Sensitive paths NOT mirrored: `.credentials.json`, `.claude.json`,
 If you want to add new categories of file to the backup, edit
 `auto-backup-worker.js` directly.
 
+Note: only the categories above are mirrored — **root-level files other
+than `CLAUDE.md`/`settings.json` are not copied**. If you keep a helper
+script at `~/.claude/` root (e.g. a Windows `auto-continue.ps1` with
+`ac-on`/`ac-off`/`ac-status`), back it up by adding **both** a
+`copyFile(...)` line in `auto-backup-worker.js` **and** a matching
+`!your-file` allow in your backup `.gitignore`. The whitelist
+`.gitignore` denies everything by default, so a `copyFile` without the
+paired `!allow` is silently dropped by `git add` and never reaches the
+backup.
+
 ### Kill switch
 
 Create the file `~/.claude/.no-auto-backup` to disable the hook
