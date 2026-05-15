@@ -66,6 +66,11 @@
             "type": "command",
             "command": "node \"<CLAUDE_HOME>/hooks/auto-backup.js\"",
             "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "node \"<CLAUDE_HOME>/hooks/auto-continue.js\"",
+            "timeout": 150
           }
         ]
       }

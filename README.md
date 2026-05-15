@@ -34,7 +34,8 @@ or copy and adjust to taste.
 │   ├── session-context-hint.js        # SessionStart: surfaces .planning/CURRENT.md (optional pattern)
 │   ├── context-statusline.js          # statusline + bridge file consumed by auto-compact-nudge
 │   ├── auto-backup.js                 # Stop: spawns the backup worker (no-op without CLAUDE_BACKUP_REPO)
-│   └── auto-backup-worker.js          # Stop worker: mirrors ~/.claude/ subset to a private git clone
+│   ├── auto-backup-worker.js          # Stop worker: mirrors ~/.claude/ subset to a private git clone
+│   └── auto-continue.js               # Stop: overnight auto-continue (no-op without auto-continue.flag)
 ├── .gitattributes                     # forces LF line endings (shebangs need them on macOS/Linux)
 ├── .gitignore
 ├── LICENSE                            # MIT
@@ -538,6 +539,57 @@ Migration:
    - Any hook paths still reading `<CLAUDE_HOME>/...` — if your home
      directory has a different absolute path on the new machine, redo
      the substitution from step 2 of the install section.
+
+---
+
+## Optional: overnight auto-continue ("night mode")
+
+`auto-continue.js` is a `Stop` hook that lets Claude keep working unattended
+(e.g. overnight) instead of stopping to wait for input. It is **opt-in and
+silent**: with no flag file present it exits in milliseconds and does nothing,
+so it is safe to leave wired in `settings.json`.
+
+### Enable / disable
+
+```bash
+# turn ON for any session
+touch ~/.claude/auto-continue.flag
+# bind to ONE session only: put that session_id inside the flag file instead
+# turn OFF
+rm ~/.claude/auto-continue.flag
+```
+
+(Windows PowerShell users: a convenience `auto-continue.ps1` with `ac-on` /
+`ac-off` / `ac-status` helpers is *not* shipped here — it is personal/OS-specific.
+The flag-file mechanism above is all the hook needs and works everywhere.)
+
+### Safety guards (any one ends the run cleanly)
+
+- `MAX_ITERATIONS = 100` hard cap per session.
+- Context floor: if a `claude-ctx-<sid>.json` bridge file (written by the
+  statusline hook) reports remaining context below 22%, it yields to
+  auto-compact instead of blocking.
+- **Verified done-marker.** When Claude ends a turn whose final line is exactly
+  `AUTO_CONTINUE: DONE`, the hook spawns an *independent* `claude -p` verifier
+  that reads the transcript and ratifies or rejects the claim. A rejected claim
+  feeds the reason back and keeps working — this closes the self-report hole
+  where an agent stops on an unproven "done".
+- Delete the flag at any time.
+
+### Cost & timeout caveat ⚠
+
+The verifier is a real headless `claude` call (Haiku by default), so it costs
+tokens — but it only runs **when the marker is actually emitted**, never on a
+normal continue turn (detection is role-aware: only the *last assistant turn's*
+standalone marker line counts; the hook's own injected text, post-compact
+summaries and tool output are ignored). The `Stop` hook `timeout` in
+`settings.json` is **150 s** on purpose: the verifier needs 60–120 s, and a
+shorter timeout would kill it before it returns. If the verifier is
+unavailable it fails safe (trusts the marker). A filesystem lock plus an
+`AC_EVAL` env guard prevent the verifier's own session from recursing.
+
+`tests/auto-continue.test.js` covers the detection logic and every
+false-positive source — run `node tests/auto-continue.test.js`.
 
 ---
 
