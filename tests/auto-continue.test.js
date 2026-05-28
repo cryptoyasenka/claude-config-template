@@ -141,6 +141,52 @@ for (const f of REAL) {
   check(`${base}: cleanTail non-empty`, r.cleanTail.length > 0, true);
 }
 
+console.log('low-context decision (auto-compact wedge fix):');
+
+const NOW = 1000000;               // arbitrary fixed "now" (no Date.now in tests)
+const FLOOR = ac.LOW_CONTEXT_PCT;  // 22
+const STALE = ac.STALE_SECONDS;    // 90
+const MAXS = ac.STUCK_STREAK_MAX;  // 6
+const gauge = (rem, ageSec = 0) => ({ remaining_percentage: rem, timestamp: NOW - ageSec });
+
+// L1 — fresh & below floor → low, streak increments from prev.
+const l1 = ac.lowContextState(gauge(0), NOW, 2);
+check('L1 fresh 0% → lowContext', l1.lowContext, true);
+check('L1 streak increments', l1.streak, 3);
+check('L1 not bailing yet', l1.bail, false);
+
+// L2 — fresh & healthy → not low, streak resets to 0.
+const l2 = ac.lowContextState(gauge(50), NOW, 4);
+check('L2 healthy → not low', l2.lowContext, false);
+check('L2 streak resets', l2.streak, 0);
+
+// L3 — below floor but STALE gauge → treated not low (never strand on old data).
+const l3 = ac.lowContextState(gauge(0, STALE + 30), NOW, 3);
+check('L3 stale low gauge ignored', l3.lowContext, false);
+check('L3 stale resets streak', l3.streak, 0);
+
+// L4 — sustained low past the backstop → bail (prev == MAXS → new streak MAXS+1).
+const l4 = ac.lowContextState(gauge(5), NOW, MAXS);
+check('L4 streak past max → bail', l4.bail, true);
+check('L4 bail streak value', l4.streak, MAXS + 1);
+
+// L5 — no bridge file at all → not low (hook does a normal block, never bails).
+const l5 = ac.lowContextState(null, NOW, 0);
+check('L5 null metrics → not low', l5.lowContext, false);
+check('L5 null no bail', l5.bail, false);
+
+// L6 — exactly AT the floor is NOT low (strict <), so we don't over-trigger.
+check('L6 exactly at floor not low', ac.lowContextState(gauge(FLOOR), NOW, 0).lowContext, false);
+
+// L7 — missing timestamp is treated as fresh (a gauge with no ts is still usable).
+check('L7 missing ts → fresh, low', ac.lowContextState({ remaining_percentage: 3 }, NOW, 0).lowContext, true);
+
+// L8 — one forced low turn then recovery → streak goes 1, then back to 0.
+const step1 = ac.lowContextState(gauge(10), NOW, 0);
+check('L8a first low turn streak=1', step1.streak, 1);
+const step2 = ac.lowContextState(gauge(55), NOW, step1.streak);
+check('L8b recovered → streak 0', step2.streak, 0);
+
 try { fs.rmSync(TMP, { recursive: true, force: true }); } catch (e) {}
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
