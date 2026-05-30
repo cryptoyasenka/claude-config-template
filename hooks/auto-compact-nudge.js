@@ -3,33 +3,28 @@
 // Two-tier early warning so Claude can land on its feet before built-in
 // auto-compact fires (~16.5% native remaining on a 200K Opus window).
 //
-// Tier 1 (PREP, 35% remaining ≈ 78% displayed, ~37K tokens headroom):
+// Tier 1 (PREP, 42% remaining ≈ 70% displayed, ~51K tokens headroom):
 //   "wrap up atomic step, write a prep snapshot with working memory"
-// Tier 2 (CRITICAL, 26% remaining ≈ 85% displayed, ~19K tokens headroom):
-//   "next tool call MUST be the snapshot write, auto-compact imminent"
-//
-// Tier 2's message explicitly tells Claude to keep working after the
-// snapshot. Earlier wording said "finish, then stop" and caused the
-// model to halt productive work as if the warning were a stop signal —
-// but built-in auto-compact handles compaction itself, so the only
-// valid reasons to stop are task completion or genuine blocking. Tier 1
-// is gentler ("don't start NEW multi-step work") and does not need the
-// same correction.
+// Tier 2 (CRITICAL, 33% remaining ≈ 80% displayed, ~33K tokens headroom):
+//   snapshot now; INTERACTIVE → this is the safe manual /compact window
+//   (payload still small, request succeeds); NIGHT MODE → keep working,
+//   built-in auto-compact fires pre-flight + delegate heavy work to sub-agents.
+//   Compacting late (~89%+) risks the compaction request itself socket-dropping.
 //
 // Each tier fires once per "high usage window". When remaining climbs
 // back above RESET_THRESHOLD (e.g. after a compact), both markers clear
 // so the cycle can repeat.
 //
-// Reads metrics written by context-statusline.js to
-// os.tmpdir()/claude-ctx-{sid}.json. Without that bridge file, this hook
-// is a no-op — the statusline must run at least once per session first.
+// Reads metrics written by gsd-statusline.js (or context-statusline.js)
+// to os.tmpdir()/claude-ctx-{sid}.json. Without that bridge file this
+// hook is a no-op — the statusline must run at least once per session.
 
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const PREP_THRESHOLD = 35;     // fire Tier 1 when remaining <= 35%
-const CRITICAL_THRESHOLD = 26; // fire Tier 2 when remaining <= 26%
+const PREP_THRESHOLD = 42;     // fire Tier 1 when remaining <= 42% (~70% displayed, ~51K headroom)
+const CRITICAL_THRESHOLD = 33; // fire Tier 2 when remaining <= 33% (~80% displayed, ~33K headroom)
 const RESET_THRESHOLD = 60;    // after compact, if remaining climbs >60% → re-arm
 const STALE_SECONDS = 60;
 
@@ -68,6 +63,10 @@ process.stdin.on('end', () => {
 
     const snapshotDir = path.join(os.homedir(), '.claude', 'snapshots');
     const prepSnapshotPath = path.join(snapshotDir, `pre-compact-prep-${sessionId}.md`);
+    // Night mode (auto-continue.flag present) changes the CRITICAL advice: keep
+    // working + delegate to sub-agents, vs interactive where we tell the user the
+    // payload is still small enough that running /compact NOW will succeed.
+    const nightMode = fs.existsSync(path.join(os.homedir(), '.claude', 'auto-continue.flag'));
 
     let message = null;
 
@@ -78,20 +77,27 @@ process.stdin.on('end', () => {
       if (!fs.existsSync(prepMarker)) {
         fs.writeFileSync(prepMarker, JSON.stringify({ firedAt: now, usedPct, skippedToCritical: true }));
       }
+      const critTail = nightMode
+        ? `After the snapshot, finish the current atomic operation, then KEEP WORKING — do not stop just ` +
+          `because of this warning. Auto-continue is ON: built-in auto-compact fires pre-flight on the next ` +
+          `forced turn and SessionStart(compact) restores from this snapshot path. To keep that compaction ` +
+          `SMALL (a ~180K one-shot summarization can socket-drop and strand the run), delegate heavy ` +
+          `reads/exploration/audit to sub-agents (Task) from here on — the main thread must stay lean.`
+        : `After the snapshot, finish the current atomic operation, then surface ONE line to the user: they ` +
+          `are at the safe manual-/compact window (~80%) — running /compact NOW succeeds because the payload ` +
+          `is still small, whereas waiting until ~89%+ risks the compaction request itself socket-dropping. ` +
+          `Do not start new multi-step work; let the user decide to /compact.`;
       message =
-        `CONTEXT CRITICAL (Stage 2/2): usage at ${usedPct}% — only ~19K tokens left before built-in auto-compact fires. ` +
+        `CONTEXT CRITICAL (Stage 2/2): usage at ${usedPct}% — ~33K tokens of headroom before built-in auto-compact. ` +
         `Your NEXT tool call MUST be Write to:\n\n` +
         `  ${prepSnapshotPath}\n\n` +
         `Minimum content: (1) active task in one line, (2) next concrete step, (3) files currently open/edited, ` +
         `(4) any in-memory decisions not yet on disk. Skip nice formatting — survival mode. ` +
-        `After the snapshot write, finish the current atomic operation. Then KEEP WORKING — ` +
-        `do not stop just because of this warning. Built-in auto-compact will fire on its own; ` +
-        `SessionStart(compact) hook will restore from this snapshot path. Stopping is only correct ` +
-        `if the user's task is actually done or genuinely blocked.`;
+        critTail;
     } else if (remaining <= PREP_THRESHOLD && !fs.existsSync(prepMarker)) {
       fs.writeFileSync(prepMarker, JSON.stringify({ firedAt: now, usedPct }));
       message =
-        `CONTEXT CHECKPOINT (Stage 1/2): usage at ${usedPct}% — ~37K tokens until built-in auto-compact. ` +
+        `CONTEXT CHECKPOINT (Stage 1/2): usage at ${usedPct}% — ~51K tokens until built-in auto-compact. ` +
         `Plan the next ~5-8 tool calls carefully:\n\n` +
         `  1. Finish current atomic step (commit, complete the edit in hand)\n` +
         `  2. Write a prep snapshot to: ${prepSnapshotPath}\n` +
@@ -99,7 +105,7 @@ process.stdin.on('end', () => {
         `in-memory decisions/constraints not yet persisted.\n` +
         `  3. Don't start NEW multi-step work.\n\n` +
         `Post-compact SessionStart hook will read that snapshot and restore your working memory. ` +
-        `A second warning fires at ~19K tokens if you haven't snapshotted by then.`;
+        `A second warning fires at ~33K tokens (≈80% displayed) if you haven't snapshotted by then.`;
     }
 
     if (!message) process.exit(0);
