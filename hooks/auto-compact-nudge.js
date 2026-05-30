@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 // Auto-compact nudge — PostToolUse hook
 // Two-tier early warning so Claude can land on its feet before built-in
-// auto-compact fires (~16.5% native remaining on a 200K Opus window).
+// auto-compact fires (near the bottom of the window; the exact native trigger on
+// Opus 4.8 is unverified and lower than the old 16.5% assumption — 200K window).
 //
-// Tier 1 (PREP, 42% remaining ≈ 70% displayed, ~51K tokens headroom):
+// Tier 1 (PREP, 42% remaining ≈ 58% displayed, ~84K tokens left):
 //   "wrap up atomic step, write a prep snapshot with working memory"
-// Tier 2 (CRITICAL, 33% remaining ≈ 80% displayed, ~33K tokens headroom):
+// Tier 2 (CRITICAL, 33% remaining ≈ 67% displayed, ~66K tokens left):
 //   snapshot now; INTERACTIVE → this is the safe manual /compact window
 //   (payload still small, request succeeds); NIGHT MODE → keep working,
 //   built-in auto-compact fires pre-flight + delegate heavy work to sub-agents.
@@ -23,8 +24,8 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const PREP_THRESHOLD = 42;     // fire Tier 1 when remaining <= 42% (~70% displayed, ~51K headroom)
-const CRITICAL_THRESHOLD = 33; // fire Tier 2 when remaining <= 33% (~80% displayed, ~33K headroom)
+const PREP_THRESHOLD = 42;     // fire Tier 1 when remaining <= 42% (~58% displayed, ~84K left)
+const CRITICAL_THRESHOLD = 33; // fire Tier 2 when remaining <= 33% (~67% displayed, ~66K left)
 const RESET_THRESHOLD = 60;    // after compact, if remaining climbs >60% → re-arm
 const STALE_SECONDS = 60;
 
@@ -88,7 +89,7 @@ process.stdin.on('end', () => {
           `is still small, whereas waiting until ~89%+ risks the compaction request itself socket-dropping. ` +
           `Do not start new multi-step work; let the user decide to /compact.`;
       message =
-        `CONTEXT CRITICAL (Stage 2/2): usage at ${usedPct}% — ~33K tokens of headroom before built-in auto-compact. ` +
+        `CONTEXT CRITICAL (Stage 2/2): usage at ${usedPct}% — ~66K tokens of context left. ` +
         `Your NEXT tool call MUST be Write to:\n\n` +
         `  ${prepSnapshotPath}\n\n` +
         `Minimum content: (1) active task in one line, (2) next concrete step, (3) files currently open/edited, ` +
@@ -97,7 +98,7 @@ process.stdin.on('end', () => {
     } else if (remaining <= PREP_THRESHOLD && !fs.existsSync(prepMarker)) {
       fs.writeFileSync(prepMarker, JSON.stringify({ firedAt: now, usedPct }));
       message =
-        `CONTEXT CHECKPOINT (Stage 1/2): usage at ${usedPct}% — ~51K tokens until built-in auto-compact. ` +
+        `CONTEXT CHECKPOINT (Stage 1/2): usage at ${usedPct}% — ~84K tokens of context left. ` +
         `Plan the next ~5-8 tool calls carefully:\n\n` +
         `  1. Finish current atomic step (commit, complete the edit in hand)\n` +
         `  2. Write a prep snapshot to: ${prepSnapshotPath}\n` +
@@ -105,7 +106,7 @@ process.stdin.on('end', () => {
         `in-memory decisions/constraints not yet persisted.\n` +
         `  3. Don't start NEW multi-step work.\n\n` +
         `Post-compact SessionStart hook will read that snapshot and restore your working memory. ` +
-        `A second warning fires at ~33K tokens (≈80% displayed) if you haven't snapshotted by then.`;
+        `A second warning fires at ~67% displayed (~66K left) if you haven't snapshotted by then.`;
     }
 
     if (!message) process.exit(0);
